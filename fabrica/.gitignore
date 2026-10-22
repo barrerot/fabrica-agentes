@@ -1,0 +1,19 @@
+# Sentinels one-shot de push (runtime local, jamás committeados)
+.claude/.motor-go
+.claude/.audit-go
+.claude/.draft-handoff
+.claude/.cr-review-*
+# Copia local del manifiesto de la fábrica (TAL-5563/TAL-8040): la provisiona
+# scripts/provision-tf-manifest.sh (o el despacho en un canal), por-checkout, nunca se committea.
+.claude/tf-manifest.conf
+# Bytecode de los scripts python del motor
+__pycache__/
+*.pyc
+# Lockfile runtime de compose-bootstrap.sh (TAL-5383 · A2): handle de flock, no es dato del
+# registro — se recrea solo, jamas se committea.
+registro/*.lock
+# Configuración y evidencias de montaje: nunca forman parte del ZIP ni del núcleo.
+instalacion/estado/
+instalacion/generado/
+instalacion/*.resp
+manifiestos/*.perfil.tsv

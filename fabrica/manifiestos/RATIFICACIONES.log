@@ -1,0 +1,2 @@
+# Registro append-only de reducciones/debilitamientos ratificados del motor.
+# Formato: <AAAA-MM-DD> | ref=<issue> | items=<conf-o-familia:shard> | <motivo>

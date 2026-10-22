@@ -1,0 +1,8 @@
+# Identificador local, ruta desde el paquete, expresión exigida.
+HOME-001	instalacion/instalacion.py	pwd.getpwnam
+HOME-002	instalacion/scripts/fases.py	--home-dir
+HOME-003	instalacion/scripts/fases.py	def check_bus_states
+GATE-001	scripts/run-local-gates.sh	TF_CHECK_REPO_ONLY no permite una corrida sellada
+GATE-002	scripts/run-gate-sealed.sh	rexec rm -f "\$R_REC"
+GATE-003	scripts/run-gate-sealed.sh	rexec test -f "\$R_REC"
+GUIA-001	instalacion/fases/F5.md	CLON/manifiestos/anexo-coordinacion-PROYECTO.md

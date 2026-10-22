@@ -1,0 +1,27 @@
+# Red de seguridad redundante. El paquete ya trae su propio .gitignore en
+# fabrica/, y git lee los de los subdirectorios; esto está aquí para que la
+# protección no dependa de un fichero que vive dentro del paquete.
+
+# Respuestas del cuestionario, estado del montaje y evidencias: son de quien
+# instala, nunca del repo.
+fabrica/instalacion/estado/
+fabrica/instalacion/generado/
+fabrica/instalacion/*.resp
+fabrica/manifiestos/*.perfil.tsv
+
+# Credenciales. F1 genera un .env.local con los tokens de GitHub, Linear y
+# CodeRabbit: eso no se sube jamás.
+.env
+.env.*
+!*.env.tmpl
+!*.env.example
+
+# Sentinels de runtime del motor y bytecode
+.claude/.motor-go
+.claude/.audit-go
+.claude/.draft-handoff
+.claude/.cr-review-*
+.claude/tf-manifest.conf
+__pycache__/
+*.pyc
+fabrica/registro/*.lock

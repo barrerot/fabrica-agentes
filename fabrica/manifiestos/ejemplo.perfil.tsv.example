@@ -1,0 +1,22 @@
+# ejemplo.perfil.tsv.example — topología MÍNIMA y SINTÉTICA de una instancia (TAL-8043).
+# NO es un perfil: el sufijo .example es deliberado. Un `*.perfil.tsv` dentro de manifiestos/ pasaría a ser
+# EL perfil de la instancia (lib-perfil.sh lo busca por ese patrón) y un segundo daría AMBIGUO (rc 2).
+# Para usarlo: cópialo FUERA de manifiestos/ (p. ej. a $SECRET_DIR/perfil.tsv) y sustituye los valores,
+# o valídalo tal cual:  bash skills/talent-ceo/scripts/lib-perfil.sh --check manifiestos/ejemplo.perfil.tsv.example
+#
+# Una máquina con acceso=local aloja CEO, torre, estación y los canales. `bus-sellar.sh` se niega (rc 2) a
+# sellar si dos actores de la MISMA máquina no se distinguen por usuario=: cada actor declara el suyo, y los
+# canales y runners (contenedores) comparten el del usuario que opera incus, distinto del de cualquier
+# actor que selle. Columnas separadas por TABULADOR. Direcciones del rango de documentación (RFC 5737).
+tipo	id	maquina	contenedor	sesion	atributos
+maquina	maq-mando	maq-mando	-	-	ip=192.0.2.10;acceso=local
+ceo	CEO	maq-mando	-	ses-ceo	roles=ceo;usuario=usuario-ceo
+pm	PM	-	-	ninguna	ejercido_por=CEO
+torre	torre-uno	maq-mando	-	ses-torre	rol=coordinador;usuario=usuario-torre
+estacion	est-uno	maq-mando	-	ses-est	rol=merge;usuario=usuario-est
+canal	canal-uno	maq-mando	cont-canal-1	-	rol=produccion;usuario=usuario-incus
+canal	canal-dos	maq-mando	cont-canal-2	-	rol=produccion;usuario=usuario-incus
+runner	run-uno	maq-mando	cont-runner-1	-	rol=gates;usuario=usuario-incus
+cron	cron-uno	-	-	-	dueno=CEO;minutos=07,22,37,52
+cron	cron-dos	-	-	-	dueno=CEO;minutos=00,15,30,45
+bus	bus-uno	maq-mando	-	-	path=/var/tmp/ejemplo-bus.log;lectores=CEO,torre-uno,est-uno

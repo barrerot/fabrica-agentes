@@ -1,0 +1,7 @@
+{
+  "plan_type": "pro",
+  "rate_limit": {
+    "primary_window": {"reset_at": 1752500000, "limit_window_seconds": 18000},
+    "secondary_window": {"reset_at": 1752517200, "limit_window_seconds": 604800}
+  }
+}

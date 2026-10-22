@@ -1,0 +1,112 @@
+# Anexo por repo — {{nombre_legible}} ({{rol}})
+
+Lectura obligatoria antes de operar este repositorio. El estado vivo del destino
+y las APIs son la fuente de verdad; ante divergencia, parar y escalar al lead.
+Este overlay se prepara para adjudicarlo en el destino, no dentro del núcleo.
+
+## §1 — Identidad
+
+| Campo | Valor |
+|---|---|
+| `repo_slug` | `{{repo_slug}}` |
+| `nombre_legible` | {{nombre_legible}} |
+| `linear_workspace` | `{{linear_workspace}}` |
+| `linear_team_key` | `{{linear_clave}}` |
+| `linear_team_id` | `{{linear_equipo_uuid}}` |
+| `initiative_id` | {{initiative}} |
+| Proyecto Linear | {{linear_proyecto}} |
+| In Progress | `{{linear_inprogress_uuid}}` |
+| In Review | `{{linear_inreview_uuid}}` |
+| Repositorio | {{repo_url}} |
+| Rama de integración | `{{repo_rama}}` |
+| Stack | `{{stack}}` |
+| Perfil | `{{perfil}}` |
+
+Auditor de los canales: {{auditor}}.
+Configuración autoritativa de Linear: `{{linear_config}}`.
+Consultar estados y labels existentes con consultar-estados-linear.sh antes de
+operar; no inventar IDs ni usar la configuración de ejemplo de otro workspace.
+La key gobierna `closes {{linear_clave}}-N` y `refs {{linear_clave}}-N`.
+
+## §2 — Gates locales
+
+Instalación de dependencias: `{{instalar_cmd}}`.
+Validador de rama: `{{validador_rama}}`.
+Motor: `{{motor}}`, manifiesto: `{{manifiesto}}`.
+
+| Gate activo | Comando |
+|---|---|
+{{gates}}
+
+{{e2e_info}}
+La estación agrega receipts sellados a head en `local-gates`; verificar la
+protección REAL de la rama antes de operar. No sustituir receipts por una
+captura de pantalla ni omitir gates por ser una entrega de documentación.
+
+## §3 — Protocolo de migraciones
+
+{{migraciones_info}}
+Actor del apply: {{actor_db}}.
+{{procedimientos}}
+
+## §4 — Superficies con path-patterns (solo excepciones al default)
+
+Superficies declaradas en el manifiesto: `{{superficies_sensibles}}`.
+{{superficies_info}}
+Fuera de las excepciones declaradas rige review normal; las destructivas
+requieren GO explícito del lead. Ante duda, clasificar como destructiva.
+
+## §5 — Actor post-merge
+
+Mergeador: verifica merge, receipts y cierre real.
+{{postmerge_info}}
+Notificación al lead: informar en la sesión de operación de toda finalización
+y de cualquier bloqueo. No aplica una integración externa de notificaciones:
+esta instancia no la configura y no autoriza envíos externos.
+Migraciones escaladas/manuales: `refs {{linear_clave}}-N` y label
+`apply-pendiente`; Done manual solo tras confirmar apply y advisors.
+`closes` requiere apply del Mergeador en el mismo turno si hay migraciones.
+
+## §6 — Lista de autoridades de receipts
+
+Autoridades de onboarding: vacías por defecto; todo receipt rechazado
+(fail-closed). No se ha adjudicado ningún user.id de GitHub en la instalación.
+Antes de aceptar atestaciones, el lead debe adjudicar enteros verificados en
+`assets/receipt-authorities.txt` del skill talent-repo-onboarding o mediante
+`TRO_RECEIPT_AUTHORITIES`. No confundirlos con los receipts de gates.
+Consultar `gh api users/{{lead_github}} --jq '.id'` durante el onboarding:
+no convertir el login en un ID inventado ni considerar acreditado el actor.
+
+## Notas operativas
+
+Lead responsable: `{{lead_github}}`.
+Onboarding: consultar el contrato validado en F4; generar en F1 no acredita montaje.
+Ensayo E2E y primer encargo de producción: exigir la evidencia durable de F8.
+Credenciales: solo nombres en el escrow; exigir check-F3 y acreditación de F7.
+Git de los canales: nombre `{{git_nombre_tmpl}}`, correo `{{git_email_tmpl}}`.
+Topología y usuarios: el TSV del perfil manda sobre esta descripción.
+Canales y runners comparten el operador Incus `{{usuario_incus}}` del host.
+Dentro de los canales se usa `{{cuser}}`; dentro del runner se usa `runner`.
+{{runner_info}}
+
+## Operación de la estación
+
+Leer `references/02-protocolo-por-pr.md`, `06-migraciones-y-slots.md` y
+`08-gates-locales.md` antes de tomar un slot. AND de gates, head exacto,
+árbol limpio y HANDOFF válido siguen siendo obligatorios.
+La fila runner del perfil y station.conf adjudican el recurso local de gates.
+No deducir recursos adicionales de sus nombres.
+Hot-files: revisar solape en todos los ficheros tocados desde branch-point;
+no se configura una lista histórica de otro producto.
+Toolchain: verificar pins del propio repositorio y repinear el CLI del runner
+al pin del producto ante drift; no heredar una versión de otro proyecto.
+{{flock_info}}
+
+### PROC-M14 — Renumerar slots en colisión
+
+{{m14_info}}
+
+### PROC-M15 — Advisors y baseline
+
+{{m15_info}}
+Nunca volcar el entorno ni ficheros de credenciales; comprobar únicamente nombres y presencia.

@@ -1,0 +1,10 @@
+{
+  "claudeAiOauth": {
+    "accessToken": "FAKE-CLAUDE-TOKEN-not-real",
+    "expiresAt": 9999999999999,
+    "rateLimitTier": "default",
+    "refreshToken": "FAKE-REFRESH-not-real",
+    "scopes": ["user:profile"],
+    "subscriptionType": "max"
+  }
+}

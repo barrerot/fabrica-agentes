@@ -1,0 +1,45 @@
+{
+  "actualizado": "1970-01-01T00:00Z",
+  "nota": "EJEMPLO NEUTRO del formato del ledger. Sustituye pozos y cuentas por los tuyos.",
+  "politica_seleccion": "gastar primero la cuenta de reset 7d MÁS CERCANO; no recolocar flotas desplegadas; pozo consumido → recargar",
+  "pozos": {
+    "p1": {
+      "estado": "CARGADO-reserva",
+      "cuenta": "cuenta-a@ejemplo.com",
+      "nota": "reserva del grupo B; se activa en la rotación",
+      "habilitada_fabrica": false
+    },
+    "p2": {
+      "estado": "CARGADO-en-uso",
+      "cuenta": "cuenta-b@ejemplo.com",
+      "nota": "pozo activo de la fábrica",
+      "habilitada_fabrica": true
+    }
+  },
+  "cuentas": [
+    {
+      "alias": "cuenta-a@ejemplo.com",
+      "pozo_origen": "p1",
+      "estado": "RESERVA",
+      "grants_vivos": ["pozo p1 (reserva)"],
+      "rest_5h": 100,
+      "reset_5h_utc": "1970-01-01T00:00Z",
+      "rest_7d": 100,
+      "rest_fable": 100,
+      "reset_7d_utc": "1970-01-01T00:00Z",
+      "verificado": "ejemplo"
+    },
+    {
+      "alias": "cuenta-b@ejemplo.com",
+      "pozo_origen": "p2",
+      "estado": "EN-USO",
+      "grants_vivos": ["pozo p2 (fábrica)"],
+      "rest_5h": 100,
+      "reset_5h_utc": "1970-01-01T00:00Z",
+      "rest_7d": 100,
+      "rest_fable": 100,
+      "reset_7d_utc": "1970-01-01T00:00Z",
+      "verificado": "ejemplo"
+    }
+  ]
+}

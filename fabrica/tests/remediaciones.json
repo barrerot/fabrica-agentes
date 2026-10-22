@@ -1,0 +1,969 @@
+[
+  {"fase":"F0", "fila":"batería: padre temporal enlazado", "textos":["batería: padre temporal enlazado"], "verde":false},
+  {"fase":"F0", "fila":"batería: árbol temporal dentro de la instancia", "textos":["batería: árbol temporal dentro de la instancia"], "verde":false},
+  {"fase":"F0", "fila":"batería: padre temporal con perfiles en ancestros", "textos":["batería: padre temporal con perfiles en ancestros"], "verde":false},
+  {"fase":"F0", "fila":"batería: padre temporal no verificable", "textos":["batería: padre temporal no verificable"], "verde":false},
+  {"fase":"F0", "fila":"batería: descendientes no terminados; conservar árbol temporal", "textos":["batería: descendientes no terminados; conservar árbol temporal"], "verde":false},
+  {"fase":"F0", "fila":"batería: descendientes no verificables", "textos":["batería: descendientes no verificables"], "verde":false},
+  {"fase":"F0", "fila":"batería: árbol temporal reapareció", "textos":["batería: árbol temporal reapareció"], "verde":false},
+  {"fase":"F0", "fila":"distribución: restaurar desde el ZIP íntegro: FICHERO", "textos":["distribución: restaurar desde el ZIP íntegro: README.md", "distribución: restaurar desde el ZIP íntegro: manifiestos/ejemplo.conf"], "verde":false},
+  {"fase":"F5", "fila":"configuración bus distinta: ROL", "textos":["configuración bus distinta:"], "verde":false},
+  {"fase":"F0", "fila":"versión de gh encontrada inferior a la mínima o no verificable", "textos":["versión de gh encontrada 2.44.1; mínima exigida 2.45.0", "versión de gh no verificable"], "verde":false},
+  {"fase":"F0", "fila":"tiempo agotado tras N s; la máquina es lenta o la suite se colgó", "textos":["tiempo agotado tras 1 s; la máquina es lenta o la suite se colgó"], "verde":false},
+  {"fase":"F1", "fila":"Linear: token rechazado", "textos":["Linear: token rechazado"], "verde":false},
+  {"fase":"F1", "fila":"Linear: consulta rechazada por el servicio", "textos":["Linear: consulta rechazada por el servicio"], "verde":false},
+  {"fase":"F1", "fila":"Linear: límite de peticiones", "textos":["Linear: límite de peticiones"], "verde":false},
+  {"fase":"F1", "fila":"Linear: sin conexión", "textos":["Linear: sin conexión"], "verde":false},
+  {"fase":"F1", "fila":"Linear: equipo EQUIPO no encontrado con este token", "textos":["Linear: equipo ABC no encontrado con este token"], "verde":false},
+  {"fase":"F1", "fila":"Linear: tope de 20 páginas", "textos":["Linear: tope de 20 páginas"], "verde":false},
+  {"fase":"F1", "fila":"Linear: paginación inválida", "textos":["Linear: paginación inválida"], "verde":false},
+  {"fase":"F5", "fila":"clon con cambios seguidos / limpieza del clon no verificable", "textos":["clon con cambios seguidos"], "verde":false},
+  {"fase":"F6", "fila":"clon con cambios seguidos / limpieza del clon no verificable", "textos":["clon con cambios seguidos"], "verde":false},
+  {"fase":"F5", "fila":"runner correspondencia del motor fallida", "textos":["runner correspondencia del motor fallida"], "verde":false},
+  {"fase":"F5", "fila":"CodeRabbit CLI sin autenticación", "textos":["CodeRabbit CLI sin autenticación"], "verde":false},
+  {"fase":"F5", "fila":"ERROR resolviendo / registro modelos / modelo de torre", "textos":["ERROR resolviendo", "registro modelos", "modelo de torre"], "verde":false},
+  {"fase":"F6", "fila":"cron modelos ausente o distinto", "textos":["cron modelos ausente o distinto"], "verde":false},
+  {"fase":"F7", "fila":"modelo", "textos":["FALLA modelo", "NOVERIF modelo"], "verde":false},
+  {"fase":"F2", "fila":"runner perfil/preflight/repositorio", "textos":["runner preflight sucio"], "verde":false},
+  {"fase":"F5", "fila":"configuración estación / seal-suite plan", "textos":["configuración estación distinta"], "verde":false},
+  {
+    "fase": "F0",
+    "fila": "herramienta ausente",
+    "textos": [
+      "herramienta ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "identidad Git ausente",
+    "textos": [
+      "identidad Git ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "recibo de batería ausente, rojo, inválido, caducado o de otro núcleo",
+    "textos": [
+      "batería: recibo ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "batería roja o incompleta",
+    "textos": [
+      "batería roja o incompleta"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "Linux requerido / RAM no verificable / disco no verificable",
+    "textos": [
+      "Linux requerido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "RAM menor que 12 GiB",
+    "textos": [
+      "RAM menor que 12 GiB"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "canales exceden RAM",
+    "textos": [
+      "canales exceden RAM"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "disco insuficiente / pool loop excede",
+    "textos": [
+      "disco insuficiente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "versión de Claude menor",
+    "textos": [
+      "versión de Claude menor"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "versión de Claude no verificable",
+    "textos": [
+      "versión de Claude no verificable"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "núcleo: pieza, árbol, enlace, inventario o hash",
+    "textos": [
+      "núcleo: hash distinto",
+      "pieza ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "CEO debe ser quien instala",
+    "textos": [
+      "CEO debe ser quien instala"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "validador de paquete rojo",
+    "textos": [
+      "validador de paquete rojo"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "No instalar como root",
+    "textos": [
+      "No instalar como root"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "nombre del clon distinto",
+    "textos": [
+      "nombre del clon distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F0",
+    "fila": "cuestionario pendiente",
+    "textos": [
+      "cuestionario pendiente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "credenciales missing",
+    "textos": [
+      "credenciales missing"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "GITHUB_TOKEN: rechazado",
+    "textos": [
+      "GITHUB_TOKEN: rechazado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "git-bootstrap-token: distinto de GITHUB_TOKEN",
+    "textos": [
+      "git-bootstrap-token: distinto de GITHUB_TOKEN"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "GITHUB_TOKEN: sin permiso push sobre el repositorio",
+    "textos": [
+      "GITHUB_TOKEN: sin permiso push sobre el repositorio"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "GITHUB_TOKEN: sin permiso admin sobre el repositorio",
+    "textos": [
+      "GITHUB_TOKEN: sin permiso admin sobre el repositorio"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "LINEAR_API_KEY: rechazada",
+    "textos": [
+      "LINEAR_API_KEY: rechazada"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "LINEAR_API_KEY: equipo declarado ausente",
+    "textos": [
+      "LINEAR_API_KEY: equipo declarado ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "sin red",
+    "textos": [
+      "sin red"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "modo 0600 / propietario",
+    "textos": [
+      "modo 0600"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "escrow vacío / pieza ausente",
+    "textos": [
+      "escrow vacío",
+      "pieza ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "escrow: formato inválido",
+    "textos": [
+      "escrow: formato inválido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "colisión del generador (rc 3)",
+    "textos": [
+      "contenido distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "rechazo del generador",
+    "textos": [
+      "repo_rama: esta versión requiere main"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "configuración: manifiesto/agents.conf incoherente o pieza ausente",
+    "textos": [
+      "configuración: agents.conf incoherente",
+      "pieza ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "usuario ausente / sin grupo de fábrica / sin incus-admin",
+    "textos": [
+      "sin grupo de fábrica"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F1",
+    "fila": "perfil/manifiesto/ledger rojo",
+    "textos": [
+      "configuración: perfil incoherente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "contenedor ausente o estado",
+    "textos": [
+      "contenedor ausente o estado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "núcleo: hash distinto o ausente en contenedor",
+    "textos": [
+      "núcleo: hash distinto o ausente en"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "núcleo local inválido",
+    "textos": [
+      "núcleo: hash distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "contenedor ausente o estado / consulta sudo o incus rechazada",
+    "textos": [
+      "contenedor ausente o estado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "verify.sh FAIL",
+    "textos": [
+      "verify.sh FAIL"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "plantilla sin marca correcta con clones",
+    "textos": [
+      "plantilla sin marca correcta con clones"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "recuperación: plantilla completa",
+    "textos": [
+      "recuperación: plantilla completa"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "recuperación: plantilla de esta instalación ausente",
+    "textos": [
+      "recuperación: plantilla de esta instalación ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F2",
+    "fila": "golden existente incompleto",
+    "textos": [
+      "construcción sin terminar"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "login Claude ausente o modo",
+    "textos": [
+      "login Claude ausente o modo"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "login/env ausente o modo en canal",
+    "textos": [
+      "login/env ausente o modo en canal"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "gh sin sesión",
+    "textos": [
+      "gh sin sesión"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "git sin autenticación",
+    "textos": [
+      "git sin autenticación"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "CodeRabbit CLI ausente",
+    "textos": [
+      "CodeRabbit CLI ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "auth-move rc / ledger vacío",
+    "textos": [
+      "auth-move rc"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "ledger: pozos/cuentas/alias / MOVE no acreditado",
+    "textos": [
+      "ledger: MOVE no acreditado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "pozo login o capacidad no acreditada",
+    "textos": [
+      "pozo login o capacidad no acreditada"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "credencial rechazada",
+    "textos": ["credencial rechazada"],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "sin cupo ahora",
+    "textos": ["sin cupo ahora"],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "sin respuesta en 90 s",
+    "textos": ["sin respuesta en 90 s"],
+    "verde": false
+  },
+  {
+    "fase": "F3",
+    "fila": "otro error (subtype)",
+    "textos": ["otro error (subtype=error_during_execution"],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "clon ausente / origin distinto / nombre distinto",
+    "textos": [
+      "origin distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "equivalente enlazado / bloque inválido",
+    "textos": [
+      "destino enlazado en clon",
+      "bloque de fábrica inválido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "destino no regular / padre no directorio",
+    "textos": [
+      "destino no regular",
+      "padre no directorio"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "canon existente distinto",
+    "textos": [
+      "canon existente distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "coderabbit: YAML con alias/tabs requiere fusión humana",
+    "textos": [
+      "coderabbit: YAML con alias/tabs requiere fusión humana"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "ruleset: checks ajenos / aprobaciones de revisión / regla no acreditada",
+    "textos": [
+      "ruleset: checks ajenos",
+      "ruleset: aprobaciones de revisión"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "ruleset: reglas efectivas no verificables / formato no verificable",
+    "textos": [
+      "ruleset: reglas efectivas no verificables"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "settings inválidos",
+    "textos": [
+      "settings inválidos"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "paridad rc 1/2 / recibo no parseable",
+    "textos": [
+      "paridad rc 1",
+      "paridad rc 2"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "manuales pendientes rc 3",
+    "textos": [
+      "manuales pendientes="
+    ],
+    "verde": true
+  },
+  {
+    "fase": "F4",
+    "fila": "autoridades CSV inválido",
+    "textos": [
+      "autoridades: CSV de ids inválido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "autoridades enlace no permitido",
+    "textos": [
+      "autoridades: enlace no permitido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "protección/ajustes relectura distinta o aplicación rechazada",
+    "textos": [
+      "protección: relectura distinta",
+      "ajustes: relectura distinta"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F4",
+    "fila": "perfil / adjudicación / validación roja",
+    "textos": [
+      "perfil rojo",
+      "validación roja"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "usuario ausente",
+    "textos": [
+      "usuario ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "clon propio de estación ausente / comando rc test",
+    "textos": [
+      "clon propio de estación ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "estado_bus distinto",
+    "textos": [
+      "estado_bus distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "origin estación distinto",
+    "textos": [
+      "origin estación distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "comando rc tmux / sesión ausente",
+    "textos": [
+      "sesión ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "renderer alternativo",
+    "textos": [
+      "renderer alternativo"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "barra ctx ausente",
+    "textos": [
+      "barra ctx ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "sesión parada en un aviso",
+    "textos": [
+      "sesión parada en un aviso"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "git sin autenticación",
+    "textos": [
+      "git sin autenticación"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "gh sin sesión",
+    "textos": [
+      "gh sin sesión"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "CodeRabbit CLI ausente",
+    "textos": [
+      "CodeRabbit CLI ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "sudoers existente distinto",
+    "textos": [
+      "sudoers existente distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "sesión ausente / consultas sudo no permitidas",
+    "textos": [
+      "sesión ausente: C1"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "identidad/creación de panes de canal fallida",
+    "textos": [
+      "identidad/creación de panes de canal fallida"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F5",
+    "fila": "clon no actualizable por fast-forward",
+    "textos": [
+      "clon no actualizable por fast-forward"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "bus ausente/enlazado",
+    "textos": [
+      "pieza ausente o enlace: bus"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "cursor ausente / bus-leer rc",
+    "textos": [
+      "cursor ausente o inválido",
+      "cursor enlazado o ajeno"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "cron CRON ausente",
+    "textos": [
+      "cron CRON ausente"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "tabla no verificable",
+    "textos": [
+      "tabla: ctx no verificable"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "sello/acreditación pendiente",
+    "textos": [
+      "sello/acreditación pendiente de F7"
+    ],
+    "verde": true
+  },
+  {
+    "fase": "F6",
+    "fila": "sudo o traversal rechazado",
+    "textos": [
+      "acceso bus rechazado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "bus lock modo 0660 / bus propietario/grupo/modo / grupo ausente",
+    "textos": [
+      "bus lock modo 0660",
+      "bus propietario/grupo/modo"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "acceso bus rechazado",
+    "textos": [
+      "acceso bus rechazado"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "estado/cursor 0700 propio / cursor enlazado o ajeno",
+    "textos": [
+      "estado/cursor 0700 propio",
+      "cursor enlazado o ajeno"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F6",
+    "fila": "cursor bus distinto / cursor ausente o inválido",
+    "textos": [
+      "cursor bus distinto",
+      "cursor ausente o inválido"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "torre / renderer / ctx",
+    "textos": [
+      "torre",
+      "renderer",
+      "ctx"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "identidad / sellado / sellado-imposible",
+    "textos": [
+      "identidad",
+      "sellado-imposible"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "cron / bus / cursor",
+    "textos": [
+      "cron",
+      "bus",
+      "cursor"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "canal / auditor",
+    "textos": [
+      "canal",
+      "auditor"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "acreditacion",
+    "textos": [
+      "acreditacion"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "menu / escalado / menu-reciente / bloqueo-sin-escalar",
+    "textos": [
+      "bloqueo-sin-escalar"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "NOVERIF",
+    "textos": [
+      "NOVERIF"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "doctor rojo",
+    "textos": [
+      "doctor rojo"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F7",
+    "fila": "PRECOND / rc 2 / comando no verificable",
+    "textos": [
+      "PRECOND"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: esquema / issue / PR/head / ruta/digest inválidos",
+    "textos": [
+      "humo: esquema incompleto",
+      "humo: issue inválida",
+      "humo: PR/head inválidos"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: tramo sin evidencia / archivo vacío",
+    "textos": [
+      "humo: tramo sin evidencia",
+      "pieza ausente o enlace"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: evidencia vacía o hash distinto",
+    "textos": [
+      "humo: evidencia vacía o hash distinto"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: merge/head sin confirmar",
+    "textos": [
+      "humo: merge/head sin confirmar"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: debe cambiar un fichero de docs",
+    "textos": [
+      "humo: debe cambiar un fichero de docs"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: gates remotos ausentes o rojos",
+    "textos": [
+      "humo: gates remotos ausentes o rojos"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "humo: Done sin evidencia Linear",
+    "textos": [
+      "humo: Done sin evidencia Linear"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "consulta gh o datos ilegibles",
+    "textos": [
+      "consulta gh o datos ilegibles"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "capturas ausentes, versión inválida o clasificación",
+    "textos": [
+      "humo: capturas reales ausentes",
+      "humo: clasificación"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "original ausente/vacío/sin binding o aprobación",
+    "textos": [
+      "humo: original vacío",
+      "humo: original sin binding",
+      "humo: plan sin aprobación"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "artefacto original ausente/vacío/hash distinto/de otra issue",
+    "textos": [
+      "humo: artefacto original",
+      "pieza ausente o enlace"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "resultado verify-handoff ausente / comando rc del verificador",
+    "textos": [
+      "humo: no hay intento verde de handoff"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "registro/versiones/capturas no coinciden / capturas sintéticas",
+    "textos": [
+      "humo: registro/versiones/capturas no coinciden",
+      "humo: capturas sintéticas"
+    ],
+    "verde": false
+  },
+  {
+    "fase": "F8",
+    "fila": "PR no liga la issue / local-gates no acreditado sobre head",
+    "textos": [
+      "humo: PR no liga la issue",
+      "humo: local-gates no acreditado sobre head"
+    ],
+    "verde": false
+  }
+]

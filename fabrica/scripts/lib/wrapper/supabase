@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# ENVOLTORIO de `supabase` para los gates de la fábrica — talent-factory#41.
+#
+# POR QUÉ EN EL RUNNER Y NO EN EL REPO: cuatro rondas de auditoría sobre TAL-5305 mostraron que
+# interceptar `supabase` DESDE el repo es esquivable por construcción (ruta absoluta,
+# node_modules/.bin, npx). Aquí el envoltorio ES el binario que el gate resuelve, así que no hay
+# forma de invocación que lo rodee salvo llamar al real por su ruta — y eso se DETECTA por ausencia
+# de marcador, no se persigue.
+#
+# LÓGICA DEL REINTENTO: la de M2 (paquete M2-WRAPPER-A-M1-1732, reintento.sh
+# sha256 c17c3c7359221c2ea533cbbbd3c757de8180e019b598b921bd87f842afca6e7d), adoptada TAL CUAL.
+# Sobre ella, tres arreglos de M1 declarados en M1-MOTOR-WRAPPER-ISSUE-1745:
+#   (1) el marcador lleva run_group, sha y wrapper_version — sin ellos un marcador huérfano de
+#       otra suite es indistinguible del bueno;
+#   (2) la escritura es ATÓMICA (temp + mv) — un lector que llegue a mitad veía JSON truncado y lo
+#       clasificaba NO MEDIDO, perdiendo una medición que sí existía;
+#   (3) el arnés de conducta corre solo (tests/test-supabase-wrapper.sh).
+set -uo pipefail
+
+TA_WRAPPER_VERSION="2"   # 2: el stop lleva --no-backup (sin él el reintento no parte de un stack limpio)
+
+_wdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── Binario REAL. Dos topologías medidas en la flota (M1-RUNNER-SUPABASE-WRAPPER-1721):
+#    · instalación npm: /usr/bin/supabase → lanzador Node → ELF en @supabase/cli-linux-x64/bin
+#    · instalación directa: /usr/bin/supabase ES el ELF
+#    Se resuelve por override explícito, luego .real, luego el primer PATH que no sea este dir.
+_ta_real() {
+  if [ -n "${TA_SUPABASE_BIN:-}" ]; then printf '%s' "$TA_SUPABASE_BIN"; return 0; fi
+  [ -x /usr/bin/supabase.real ] && { printf '%s' /usr/bin/supabase.real; return 0; }
+  local IFS=: d
+  for d in $PATH; do
+    [ -n "$d" ] || continue
+    [ "$d" = "$_wdir" ] && continue
+    case "$d" in */node_modules/.bin) continue ;; esac   # ahí vive nuestra propia copia
+    [ -x "$d/supabase" ] && { printf '%s' "$d/supabase"; return 0; }
+  done
+  return 1
+}
+_real="$(_ta_real)" || { echo "supabase(envoltorio): no encuentro el binario real — no invento un verde" >&2; exit 127; }
+
+# ── ¿Es ESTA invocación el `db reset`? Regla del PAR ADYACENTE, no subcadena: `db` y `reset` como
+#    dos tokens contiguos, ninguno una opción. Cerrada por construcción (26 casos, M1-PRERREVISION-
+#    2230V8B-1625): un `--body 'db reset'` es UN token y no forma par; un flag con valor consume su
+#    valor y no lo confunde con subcomando; un flag DESCONOCIDO con valor sigue enrutando bien.
+_ta_es_db_reset() {
+  local prev="" tok
+  for tok in "$@"; do
+    case "$prev" in
+      --workdir|--network-id|--profile|--log-level|--output|--output-format|--dns-resolver|--agent|--project-ref|--db-url)
+        prev=""; continue ;;
+    esac
+    if [ "$prev" = "db" ] && [ "$tok" = "reset" ]; then return 0; fi
+    prev="$tok"
+  done
+  return 1
+}
+
+TA_GENERIC_SIGNATURE='error running container'
+TA_RACE_PATTERNS='tenants_external_id_index'
+TA_RACE_CONTAINERS='supabase_db|supabase_realtime'
+
+_ta_marker_writable() {
+  [ -n "${LG_GATE_MARKER_DIR:-}" ] || return 1
+  [ -d "$LG_GATE_MARKER_DIR" ] || return 1
+  local probe="$LG_GATE_MARKER_DIR/.db-reset-retry.probe"
+  : > "$probe" 2>/dev/null || return 1
+  rm -f "$probe" 2>/dev/null
+  return 0
+}
+
+# ARREGLO (1) y (2) de M1: contrato completo + escritura atómica.
+_ta_write_marker() { # <retried> <reason> <stop_rc> <rc...>
+  local retried="$1" reason="$2" stop_rc="$3"; shift 3
+  local rcs="" r reason_json dst tmp
+  for r in "$@"; do rcs="${rcs:+$rcs,}$r"; done
+  [ -n "${LG_GATE_MARKER_DIR:-}" ] || return 1
+  [ -d "$LG_GATE_MARKER_DIR" ] || return 1
+  if [ -n "$reason" ]; then reason_json="\"$reason\""; else reason_json='null'; fi
+  dst="$LG_GATE_MARKER_DIR/db-reset-retry.json"
+  tmp="$(mktemp "$dst.XXXXXX" 2>/dev/null)" || return 1
+  printf '{"retried":%s,"rc":[%s],"stop_rc":%s,"reason":%s,"run_group":%s,"sha":%s,"wrapper_version":%s}\n' \
+    "$retried" "$rcs" "$stop_rc" "$reason_json" \
+    "$(_ta_json_str "${LG_RUN_GROUP:-}")" "$(_ta_json_str "${LG_SHA:-}")" "\"$TA_WRAPPER_VERSION\"" \
+    > "$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$dst" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  return 0
+}
+_ta_json_str() { [ -n "${1:-}" ] && printf '"%s"' "$1" || printf 'null'; }
+
+# INFORMATIVA: alimenta `reason`, nunca decide (la firma NO sobrevive al contenedor de un solo uso).
+_ta_confirm_race() {
+  local out="$1" since="$2" name
+  printf '%s' "$out" | grep -qE "$TA_RACE_PATTERNS" && return 0
+  command -v docker >/dev/null 2>&1 || return 1
+  for name in $(docker ps -a --format '{{.Names}}' 2>/dev/null | grep -E "$TA_RACE_CONTAINERS"); do
+    docker logs --since "$since" "$name" 2>&1 | grep -qE "$TA_RACE_PATTERNS" && return 0
+  done
+  return 1
+}
+
+_ta_run_real() { "$_real" "$@"; }
+
+_ta_retry_reset() {
+  local out rc1 rc2 stop_rc since reason prometida
+  since="$(date -u +%Y-%m-%dT%H:%M:%S 2>/dev/null || echo 5m)"
+  prometida=0; _ta_marker_writable && prometida=1
+  out="$(_ta_run_real "$@" 2>&1)"; rc1=$?
+  printf '%s\n' "$out"
+  if [ "$rc1" -eq 0 ]; then
+    _ta_write_marker 0 "" null 0 || { [ "$prometida" -eq 1 ] && { echo "envoltorio: prometí evidencia y no pude escribirla" >&2; return 1; }; }
+    return 0
+  fi
+  # Un fallo que NO es el genérico se propaga TAL CUAL: ni reintento ni marcador de reintento.
+  if ! printf '%s' "$out" | grep -qF "$TA_GENERIC_SIGNATURE"; then
+    _ta_write_marker 0 "" null "$rc1" >/dev/null 2>&1 || true
+    return "$rc1"
+  fi
+  reason=unconfirmed; _ta_confirm_race "$out" "$since" && reason=confirmed
+  # stop → start limpio antes del ÚNICO reintento.
+  # `--no-backup` NO es cosmético: sin él, `stop` VUELCA un backup del stack y el `start` siguiente
+  # lo RESTAURA, así que el segundo intento no parte de un stack limpio y repite el mismo fallo.
+  # Medido en campo por M2: 4 resets seguidos con rc [1,1] en dos runners. El flag venía en la
+  # lógica entregada (reintento.sh:120) y se perdió al trasladarla al envoltorio.
+  _ta_run_real stop --no-backup >/dev/null 2>&1; stop_rc=$?
+  if ! _ta_run_real start >/dev/null 2>&1; then
+    # start fallido ⇒ NO hubo segundo reset: retried=0, y se declara.
+    _ta_write_marker 0 start_failed "$stop_rc" "$rc1" >/dev/null 2>&1 || true
+    return "$rc1"
+  fi
+  out="$(_ta_run_real "$@" 2>&1)"; rc2=$?
+  printf '%s\n' "$out"
+  if ! _ta_write_marker 1 "$reason" "$stop_rc" "$rc1" "$rc2"; then
+    [ "$prometida" -eq 1 ] && { echo "envoltorio: hubo un reintento y no pude declararlo — gate ROJO a propósito" >&2; return 1; }
+    echo "envoltorio: hubo un reintento y no hay dónde declararlo (sin LG_GATE_MARKER_DIR)" >&2
+  fi
+  return "$rc2"
+}
+
+if _ta_es_db_reset "$@"; then _ta_retry_reset "$@"; exit $?; fi
+exec "$_real" "$@"

@@ -1,0 +1,446 @@
+### PROC-M13 — Aplicar migraciones a producción (Management API)
+
+**Cuándo**: post-merge de todo PR con archivos nuevos en `{{migraciones_dir}}/`. Actor: el
+**Mergeador**. Este bloque conserva las guardas del procedimiento de referencia;
+no acredita por sí solo una ejecución en producción de esta instancia.
+
+**`closes` vs `refs` — el Done debe ser VERDAD** (PROC-M13): `closes {{linear_clave}}-N` cierra el issue
+al mergear, lo que presupone que el apply ocurre **en el MISMO turno por el propio
+Mergeador**. Si el apply NO es del Mergeador o queda escalado/manual (incluido un GO de destructiva pendiente), el `closes` produce un
+**Done FALSO** (issue cerrada con la migración sin aplicar). En esos casos: **`refs {{linear_clave}}-N`
+en el body (NUNCA `closes`) + label `apply-pendiente`**, y el Done se produce a mano tras
+confirmar el apply. Regla: `closes` solo cuando apply-del-Mergeador-mismo-turno es el
+contrato vigente del repo.
+
+**PROC-M13 es UNA unidad ejecutable, no bloques sueltos que se corren uno a uno.** El apply
+tiene un bucle (una migración por iteración) y variables que se resuelven en orden — las
+tratar cada Paso como un bloque independiente provoca fallos (uso de `$SQL_FILE`
+antes de asignarlo; los pasos de
+apply FUERA del `while`; el ledger leído sin validar). Los "Paso N" de abajo son secciones
+**didácticas** del MISMO script; el artefacto CANÓNICO a ejecutar es el bloque `bash`
+consolidado del final de esta subsección. Correrlo como script (`bash proc-m13.sh`) o vía
+`bash <<'PROC_M13' … PROC_M13`, con `SUPABASE_ACCESS_TOKEN` en el entorno — NUNCA pegando
+bloque a bloque.
+
+- **Paso 0 — token saneado**: `SUPABASE_ACCESS_TOKEN` pegado de un `.env` llega con comillas
+  o `\r` → 401/403 opacos; se sanea con `tr -d`.
+- **Paso 0b — hard-gate de Vault (INCONDICIONAL)**: corre `check-cron-secrets-provisioned.sh`
+  SIEMPRE antes de tocar prod (la detección condicional era no-operativa
+  post-merge). Exit≠0 aborta; provisionar el secret vía `vault.create_secret` (SQL/Management
+  API; consultar el runbook de la dependencia del PR, nunca una ruta de Dashboard sin verificar).
+- **Runbook del PR = parte del contrato de apply**: si el PR incluye un
+  runbook que documenta la dependencia añadida, leerlo ANTES de aplicar. El grep del `.sql`
+  muestra CUÁNDO se lee la dependencia, no si la superficie está viva ni el contrato de fallo.
+- **Paso 2 — gap real main ↔ prod (NUNCA de memoria)**: el ledger de prod se lee con el
+  helper `fetch_ledger`, que valida **HTTP + que la respuesta sea un array JSON** antes de
+  usarla (un `{"message":"Unauthorized"}` o un 5xx transitorio dejaba
+  `"$WORKDIR/v-prod.txt"` VACÍO → `comm -23` marcaba todo `main` como gap → reaplicar la historia
+  entera). Aborta ante fallo de lectura o ante divergencia (`comm -13` no vacío: prod con
+  versiones que `main` no conoce). El nombre "Paso 2" se conserva pese a ejecutarse antes que
+  Paso 0c/1: las referencias externas (`06-migraciones-y-slots.md:19`, `08-gates-locales.md`,
+  `talent-channel-operation/scripts/preflight-issue.sh` — reconciliado PROC-M13, quedó fuera
+  de esta lista cuando se hizo la preservación) citan la ETIQUETA, no una posición.
+  `count`/`max(version)` NO sustituyen la comparación bidireccional.
+- **Paso 0c — resolver CADA migración pendiente, EN ORDEN**: bucle sobre `"$WORKDIR/v-gap.txt"`
+  (salida ordenada de `comm -23`, ÚNICA fuente válida — nunca un timestamp a mano). `SQL_FILE`
+  se resuelve por glob contra el timestamp real y `NAME` se deriva del archivo en disco;
+  aborta si no hay exactamente un archivo. **Los Pasos 1/3/4 corren DENTRO de este bucle**
+  (antes estaban tras el `done`, así que un gap múltiple recorría todos los
+  timestamps y aplicaba UNA sola vez con `TS` vacío del EOF).
+- **Paso 1 — pre-check transaccional FAIL-CLOSED**: si el `.sql` tiene control de transacción
+  top-level (`BEGIN;`/`COMMIT;`/`ROLLBACK;` fuera de `AS $$…$$`), ABORTA — Paso 3 lo
+  envolvería en OTRO `begin;…commit;`, y un `COMMIT`/`ROLLBACK` interno rompería la atomicidad
+  schema↔ledger (`06-migraciones-y-slots.md` §3). Gestionar esas aparte / escalar.
+- **Paso 3 — payload**: DDL + `insert` al ledger en el MISMO `begin;…commit;` (atomicidad),
+  escapado con `jq -Rs`.
+- **Paso 4 — POST**: SIEMPRE `curl` (Python/urllib → Cloudflare 1010, verificado
+  PROC-M13). Valida HTTP **y la WHITELIST ESTRUCTURAL EXACTA** de la respuesta vía el helper
+  compartido `require_shape` (una lista negra —"array sin objetos-error"—
+  seguía aceptando `[{"unexpected":true}]`, `[{"message":…}]`, `[null]`, `["garbage"]`). Éxito
+  ⇔ un ARRAY cuyos elementos (si hay) son EXACTAMENTE `{"schedule": <número>}` (`[]`, el caso
+  normal del `commit`, o `[{"schedule":N}]` cuando hay cron.schedule); cualquier otra forma
+  aborta el gap SIN registrar el ledger.
+- **Paso 5 — verificación post-apply**: sincronía DEFINITIVA (main FRESCO de `origin` vía
+  `git ls-tree`, no el working tree) reusando `fetch_ledger` (misma validación robusta) +
+  advisors `security`/`performance` con 0 `ERROR` (PROC-M15). El conteo de advisors valida
+  primero la WHITELIST COMPLETA vía `require_shape` (`.lints[]?` con `?`, o
+  validar solo que `.lints` sea array, dejaba pasar `{}`, `{"message":…}`, `{"lints":[{}]}`,
+  `{"lints":[null]}`): objeto con `.lints` array y CADA elemento un objeto con `.level` en
+  `{ERROR,WARN,INFO}`; una entrada incompleta o un level desconocido (cambio de contrato del
+  endpoint) falla cerrado.
+- **Token fuera de argv**: todos los `curl` usan un config file `0600` (`-K`) con la cabecera
+  `Authorization`, nunca `-H "Bearer $TOKEN"` en la línea de comandos (
+  mismo patrón que `check-cron-secrets-provisioned.sh`).
+
+**Lectura de la respuesta**: el contrato de éxito es una WHITELIST EXACTA — un body que
+sea un ARRAY cuyos elementos (si hay) son EXACTAMENTE `{"schedule": <número>}`: `[]` (el caso
+normal, result-set del `commit`) o `[{"schedule":N}]` cuando la migración incluye
+`cron.schedule` — significa **tx commit OK** (la Management API devuelve el result-set del
+ÚLTIMO statement; vacío = el `commit` pasó). CUALQUIER otra forma (objeto, `null`, JSON
+inválido, o un array con cualquier elemento que no case `{"schedule":número}` —
+`[{"unexpected":true}]`, `[{"error":…}]`, `[null]`, `["garbage"]`) = fallo → aborta sin
+registrar el ledger (whitelist estructural, no lista negra de patrones ya vistos).
+
+**Migraciones largas/destructivas**: la Management API corta a ~2 min (statement_timeout +
+CF 524 ~100s) y un 524 NO aborta la transacción server-side (riesgo de doble-apply) → esas
+van por conexión directa / `supabase db push`, NO por este script (que usa `--max-time 120`
+por POST; una migración que se acerque a ese límite debe ir por la ruta directa).
+
+**Unidad ejecutable canónica**: ejecutar completa desde el clon actualizado del producto,
+con el gate de Vault declarado en el cuestionario presente. Si falta, el apply aborta.
+Las pruebas de instalación verifican forma y guardas; no acreditan apply remoto.
+
+```bash
+#!/usr/bin/env bash
+# PROC-M13 — unidad ejecutable completa de apply a prod (Management API).
+# Correr como script (bash proc-m13.sh) o vía `bash <<'PROC_M13' ... PROC_M13`, NUNCA
+# pegando bloque a bloque (el orden importa y hay un bucle: fragmentarlo permite usar
+# variables antes de asignarlas). Requiere SUPABASE_ACCESS_TOKEN en el entorno.
+set -euo pipefail
+
+PROJECT_REF="{{supabase_ref}}"
+API="https://api.supabase.com/v1/projects/${PROJECT_REF}"
+
+# ── Clasificación estructurada del fallo: PROC-M13 declara la
+# clase de CADA salida ≠0 escribiendo un literal FIJO —NUNCA una variable interpolada, NUNCA
+# $body/$resp/cualquier dato remoto— en el fichero que indica PROC_M13_CLASS_FILE (lo fija el
+# WRAPPER; el default /dev/null hace la escritura un no-op inocuo en ejecución manual o bajo
+# el selftest). El wrapper clasifica leyendo ESTE fichero, nunca el log tee'd: un cuerpo HTTP
+# remoto interpolado en un echo "✗ ..." nunca alcanza este canal, así que no puede falsificar
+# la clase (ref01 §2 "Publicación del cierre").
+: "${PROC_M13_CLASS_FILE:=/dev/null}"
+class() { printf '%s' "$1" > "$PROC_M13_CLASS_FILE" 2>/dev/null || true; }  # $1: TRANSITORIO|ESCALAR, SIEMPRE literal
+
+# ── Paso 0 — token saneado (comillas/CR de un .env pegado → 401/403 opacos) ──
+TOKEN="$(printf '%s' "${SUPABASE_ACCESS_TOKEN:-}" | tr -d '\042\047\r')"
+[ -n "$TOKEN" ] || { class TRANSITORIO; echo "✗ Paso 0: SUPABASE_ACCESS_TOKEN ausente" >&2; exit 2; }
+
+# Directorio de trabajo PRIVADO por ejecución (mktemp -d, 0700) — TODOS los temporales
+# (config de curl, payloads, y las listas del ledger/gap de abajo) viven aquí. Evita rutas
+# predecibles en /tmp: dos applies concurrentes NO se pisan/mezclan sus gaps y ningún symlink
+# preexistente puede secuestrar una escritura (limpieza del temporal). Un ÚNICO trap
+# limpia todo al salir (bash reemplaza traps: no dejar dos `trap … EXIT`).
+WORKDIR="$(mktemp -d)"; trap 'rm -rf "$WORKDIR"' EXIT
+
+# Token vía config file 0600 (-K), NUNCA en argv (evita fuga por
+# /proc/<pid>/cmdline; mismo patrón que check-cron-secrets-provisioned.sh). Todos los curl
+# de abajo usan `-K "$CURL_CFG"` en vez de `-H "Authorization: Bearer $TOKEN"`.
+CURL_CFG="$WORKDIR/curl.cfg"; : > "$CURL_CFG"; chmod 600 "$CURL_CFG"
+{ printf 'header = "Authorization: Bearer %s"\n' "$TOKEN"
+  printf 'header = "Content-Type: application/json"\n'; } > "$CURL_CFG"
+
+# ── Helper: validar-forma-exacta-o-abortar  ── un HTTP 200 NO prueba
+# nada sobre la FORMA del cuerpo. Este helper exige que el body sea JSON válido Y cumpla un
+# predicado jq POSITIVO; retorna ≠0 (JSON inválido → jq sale ≠0; predicado false → jq -e
+# sale 1) e imprime el body para diagnóstico. Se usa en el POST (Paso 4) y en advisors
+# (Paso 5) — las dos validaciones que eran fail-open.
+require_shape() {  # $1 body · $2 predicado-jq-boolean · $3 contexto
+  printf '%s' "$1" | jq -e "$2" >/dev/null 2>&1 && return 0
+  echo "✗ $3: respuesta fuera de contrato — $1" >&2
+  return 1
+}
+
+# ── Helper: leer el ledger de prod con validación HTTP + JSON + forma  ──
+# Imprime las versiones ordenadas por stdout; retorna ≠0 (→ set -e aborta) ante cualquier
+# fallo de red, HTTP no-2xx, o respuesta que no sea un array JSON. SIN esta validación, un
+# {"message":"Unauthorized"} o un 5xx transitorio dejaba v-prod VACÍO y comm -23 marcaba
+# todo main como gap (reaplicar la historia entera). `local ...; x="$(...)" || return` en
+# líneas separadas: `local x="$(...)"` enmascara el exit code del command-substitution.
+fetch_ledger() {
+  local resp code body
+  resp="$(printf 'select version from supabase_migrations.schema_migrations order by version;' \
+    | jq -Rs '{query:.}' \
+    | curl -q -sS -w $'\n%{http_code}' --connect-timeout 10 --max-time 60 \
+        -K "$CURL_CFG" -X POST "$API/database/query" --data-binary @-)" \
+    || { class TRANSITORIO; echo "✗ ledger: curl falló (red)" >&2; return 1; }
+  code="$(printf '%s' "$resp" | tail -n1)"
+  body="$(printf '%s' "$resp" | sed '$d')"
+  case "$code" in
+    200|201) ;;
+    *) class TRANSITORIO; echo "✗ ledger: HTTP ${code:-sin-respuesta} — $body" >&2; return 1 ;;
+  esac
+  printf '%s' "$body" | jq -e 'type == "array"' >/dev/null 2>&1 \
+    || { class TRANSITORIO; echo "✗ ledger: respuesta no es un array JSON (¿error/token?) — $body" >&2; return 1; }
+  printf '%s' "$body" | jq -r '.[].version' | sort
+}
+
+# ── Helper: has_toplevel_txcontrol — lexer FAIL-CLOSED del Paso 1. Tokeniza
+# ignorando comentarios de línea (--), comentarios de bloque anidados (/* */), strings
+# ('...' con '' escapado, y E'...' con backslash-escape \'), identificadores ("...") y
+# cuerpos dollar-quoted ($tag$...$tag$)
+# — el regex viejo daba FALSOS POSITIVOS (un `commit;` dentro de un comentario o de un
+# cuerpo $$...$$ de función plpgsql abortaba un apply legítimo) y FALSOS NEGATIVOS
+# (`commit work;`, `commit and chain;`, `end;` bare —sinónimo de COMMIT—, y sobre todo
+# `abort;` —sinónimo Postgres de ROLLBACK: cierra la transacción exterior igual que
+# rollback y separa el DDL del insert al ledger, fallo de atomicidad—).
+# Exit 0 = detectó control de tx top-level (el caller aborta) · exit 1 = no detectó nada ·
+# exit 2 = tokenización incompleta (EOF dentro de string/comentario/dollar sin cerrar) →
+# fail-closed, tratado por el Paso 1 igual que awk roto (PROC-M13).
+has_toplevel_txcontrol() {  # $1 = ruta SQL
+  awk '
+    BEGIN { sq = sprintf("%c", 39); state = "normal"; dtag = ""; stmt = ""; found = 0; estr = 0 }
+    {
+      line = $0 "\n"; n = length(line)
+      for (i = 1; i <= n; i++) {
+        c = substr(line, i, 1); c2 = substr(line, i, 2)
+        if (state == "normal") {
+          if (c2 == "--") { state = "linecomment"; i++; continue }
+          if (c2 == "/*") { state = "blockcomment"; depth = 1; i++; continue }
+          if (c == sq)   {
+            # PROC-M13: distinguir un escape-string con prefijo E (donde el
+            # backslash ESCAPA el caracter siguiente, incl. la comilla) de un string regular
+            # (con standard_conforming_strings=on, default PG, el backslash es literal). La E
+            # cuenta como prefijo de escape SOLO si es un token suelto: el caracter previo
+            # inmediato es E o e y el anterior a ese NO es identificador (evita note<q>x<q>).
+            p1 = substr(line, i-1, 1); p2 = substr(line, i-2, 1)
+            estr = ((p1 == "E" || p1 == "e") && p2 !~ /[A-Za-z0-9_]/) ? 1 : 0
+            state = "squote"; continue
+          }
+          if (c == "\"") { state = "dquote"; continue }
+          if (c == "$") {
+            rest = substr(line, i)
+            if (match(rest, /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/)) {
+              dtag = substr(rest, RSTART, RLENGTH); state = "dollar"
+              i += RLENGTH - 1; continue
+            }
+          }
+          if (c == ";") { check_stmt(stmt); stmt = ""; continue }
+          stmt = stmt c; continue
+        }
+        if (state == "linecomment") { if (c == "\n") state = "normal"; continue }
+        if (state == "blockcomment") {
+          if (c2 == "/*") { depth++; i++; continue }
+          if (c2 == "*/") { depth--; i++; if (depth == 0) state = "normal"; continue }
+          continue
+        }
+        if (state == "squote") {
+          # En un escape-string con prefijo E el backslash escapa el caracter siguiente y por
+          # tanto NO cierra la cadena; sin esto el lexer cerraba en el backslash-comilla y
+          # leia un commit dentro del literal como control top-level (FALSO POSITIVO que
+          # aborta un apply legitimo). En string regular estr=0 y el backslash es literal.
+          if (estr && c == "\\") { i++; continue }
+          if (c == sq) {
+            if (substr(line, i+1, 1) == sq) { i++; continue }
+            state = "normal"; estr = 0
+          }
+          continue
+        }
+        if (state == "dquote") { if (c == "\"") state = "normal"; continue }
+        if (state == "dollar") {
+          rest = substr(line, i)
+          if (index(rest, dtag) == 1) { i += length(dtag) - 1; state = "normal"; dtag = "" }
+          continue
+        }
+      }
+    }
+    function check_stmt(s,    t, tl) {
+      t = s
+      gsub(/^[ \t\r\n]+/, "", t); gsub(/[ \t\r\n]+/, " ", t)
+      if (t == "") return
+      tl = tolower(t)
+      if (tl ~ /^begin([ \t]+(work|transaction))?([ \t]|$)/) { found = 1; return }
+      if (tl ~ /^start[ \t]+transaction([ \t]|$)/) { found = 1; return }
+      if (tl ~ /^commit([ \t]+work)?([ \t]+and([ \t]+no)?[ \t]+chain)?([ \t]|$)/) { found = 1; return }
+      if (tl ~ /^rollback([ \t]+work)?([ \t]+and([ \t]+no)?[ \t]+chain)?([ \t]|$)/) { found = 1; return }
+      if (tl ~ /^abort([ \t]+(work|transaction))?([ \t]|$)/) { found = 1; return }
+      if (tl ~ /^end([ \t]+(work|transaction))?([ \t]|$)/) { found = 1; return }
+    }
+    END {
+      check_stmt(stmt)
+      # PROC-M13: si la tokenización terminó DENTRO de un string/comentario/cuerpo dollar sin
+      # cerrar, un commit;/rollback; top-level oculto en esa región nunca se vio → devolver
+      # «limpio» (1) sería fail-open. Estado incompleto = lexer no fiable → rc=2 (el Paso 1 lo
+      # trata como abort fail-closed, igual que un awk roto). linecomment NO puede persistir:
+      # cada record recibe "\n" y el handler de linecomment vuelve a normal en ese "\n".
+      if (state == "squote" || state == "dquote" || state == "blockcomment" || state == "dollar") {
+        printf "has_toplevel_txcontrol: tokenización incompleta (terminó en estado %s sin cerrar) — FAIL-CLOSED\n", state > "/dev/stderr"
+        exit 2
+      }
+      exit (found ? 0 : 1)
+    }
+  ' "$1"
+}
+
+# ── Paso 0b — hard-gate de secrets de Vault (INCONDICIONAL) ──
+SUPABASE_ACCESS_TOKEN="$TOKEN" bash {{vault_gate}} || {
+  class TRANSITORIO
+  echo "✗ Paso 0b: hard-gate de Vault falló (ver mensaje del script: exit 1 secret ausente/vacío, exit 2 precondición) — ABORTAR." >&2
+  exit 1
+}
+
+# ── Paso 2 — gap real main ↔ prod (NUNCA de memoria). Aborta ante fallo de lectura del
+#    ledger (fetch_ledger) o ante divergencia (prod con versiones que main no conoce). ──
+ls {{migraciones_dir}}/*.sql | xargs -n1 basename | cut -d_ -f1 | sort > "$WORKDIR/v-main.txt"
+fetch_ledger > "$WORKDIR/v-prod.txt"   # set -e + fetch_ledger: si falla, aborta ANTES de usarlo
+
+comm -13 "$WORKDIR/v-main.txt" "$WORKDIR/v-prod.txt" > "$WORKDIR/v-prod-only.txt"
+if [ -s "$WORKDIR/v-prod-only.txt" ]; then
+  class ESCALAR
+  echo "✗ Paso 2: prod tiene versiones que main no conoce — DIVERGENCIA, ESCALAR al lead. NO continuar." >&2
+  cat "$WORKDIR/v-prod-only.txt" >&2
+  exit 1
+fi
+comm -23 "$WORKDIR/v-main.txt" "$WORKDIR/v-prod.txt" > "$WORKDIR/v-gap.txt"   # pendientes, YA en orden ascendente
+
+if [ ! -s "$WORKDIR/v-gap.txt" ]; then
+  echo "✓ Paso 2: sin gap — prod ya sincronizado con main. Nada que aplicar."
+else
+  # ── Paso 0c/1/3/4 — por CADA migración pendiente, EN ORDEN, todo dentro del bucle ──
+  while read -r TS; do
+    [ -n "$TS" ] || continue   # EOF/línea vacía: nunca aplicar con TS vacío
+
+    # Paso 0c — resolver SQL_FILE/NAME desde el archivo REAL en disco (nunca a mano)
+    MATCHES=({{migraciones_dir}}/"${TS}"_*.sql)
+    if [ ! -e "${MATCHES[0]}" ]; then
+      class ESCALAR
+      echo "✗ Paso 0c: ningún archivo local para el timestamp pendiente $TS (¿drift ledger/main?)" >&2
+      exit 2
+    fi
+    if [ "${#MATCHES[@]}" -gt 1 ]; then
+      class ESCALAR
+      echo "✗ Paso 0c: más de un archivo para el timestamp $TS — nombre duplicado, escalar" >&2
+      exit 2
+    fi
+    SQL_FILE="${MATCHES[0]}"
+    NAME="$(basename "$SQL_FILE" .sql | cut -d_ -f2-)"
+
+    # GUARDA DE FORMA — CRITICAL. `$TS` y `$NAME` se
+    # interpolan DENTRO de literales SQL de comilla simple que viajan a la Management API, y
+    # `$NAME` sale de un `basename` del árbol: **un nombre de fichero con una comilla rompe el
+    # literal** y lo que queda es una petición distinta de la que se creía enviar. No hace falta
+    # malicia — basta un fichero mal nombrado.
+    #
+    # Se valida por FORMA y se ABORTA; no se sanea. Sanear obliga a acertar con el escapado de un
+    # dialecto ajeno en cada sitio, y un escapado que falla no avisa: produce SQL válido con otro
+    # significado. Abortar convierte un nombre raro en un error ruidoso ANTES de tocar producción,
+    # que es el mismo criterio que `identidad_canonica` aplica al sello — validar la forma en vez
+    # de fiarse de una herramienta.
+    case "$TS" in
+      ''|*[!0-9]*) class ESCALAR
+        echo "✗ Paso 0c: timestamp '$TS' fuera de forma (se exigen 14 dígitos) — no se interpola en SQL" >&2
+        exit 1 ;;
+    esac
+    [ "${#TS}" -eq 14 ] || { class ESCALAR
+      echo "✗ Paso 0c: timestamp '$TS' tiene ${#TS} dígitos, se exigen 14 — no se interpola en SQL" >&2
+      exit 1; }
+    # `NAME` acotado a lo que un nombre de migración usa de verdad: letras, dígitos, `_` y `-`.
+    # La comilla, el punto y coma, los espacios y cualquier cosa exótica quedan FUERA por
+    # construcción, no por lista de prohibidos — una lista de prohibidos no es un universo.
+    case "$NAME" in
+      ''|*[!a-zA-Z0-9_-]*) class ESCALAR
+        echo "✗ Paso 0c: nombre de migración '$NAME' fuera de forma (solo [a-zA-Z0-9_-]) — no se interpola en SQL" >&2
+        exit 1 ;;
+    esac
+
+    # Paso 1 — pre-check transaccional FAIL-CLOSED (lexer: ignora comentarios y cuerpos $$…$$).
+    # PROC-M13: capturar el rc EXPLÍCITAMENTE. El helper contractualmente
+    # devuelve 0=detectó control · 1=limpio; CUALQUIER otro rc (awk ausente/roto, archivo
+    # ilegible, señal) NO es «limpio» — con el `if has_toplevel_txcontrol` previo caía a la
+    # rama else y APLICABA sin haber corrido el gate de verdad (FAIL-OPEN). Ahora solo rc=1
+    # continúa; rc=0 y cualquier otro rc abortan (fail-closed).
+    # Captura set -e-safe: `cmd; rc=$?` como statement suelto abortaría bajo set -e en el
+    # caso común rc=1 (limpio); `rc=0; cmd || rc=$?` mantiene la lectura del rc sin disparar
+    # errexit (igual que el `if cmd` previo, que estaba exento por ser condición).
+    _tx_rc=0; has_toplevel_txcontrol "$SQL_FILE" || _tx_rc=$?
+    if [ "$_tx_rc" -eq 0 ]; then
+      class ESCALAR
+      echo "✗ Paso 1: $SQL_FILE tiene control de transacción top-level — ABORTAR (Paso 3 lo envolvería en OTRO begin/commit). Gestionar aparte o escalar." >&2
+      exit 1
+    elif [ "$_tx_rc" -ne 1 ]; then
+      class ESCALAR
+      echo "✗ Paso 1: el lexer has_toplevel_txcontrol falló (rc=$_tx_rc, ni 0=detectó ni 1=limpio) — FAIL-CLOSED, ABORTAR: no se puede confiar en el pre-check." >&2
+      exit 1
+    fi
+
+    # Paso 3 — payload: DDL + insert al ledger en el MISMO commit (atomicidad, ref 06 §3)
+    PAYLOAD="$WORKDIR/payload.json"
+    { printf 'begin;\n'
+      # Lock EXPLÍCITO sobre el ledger INMEDIATAMENTE tras begin, ANTES de cualquier DDL
+      # La transacción no debe limitarse a tocar schema_migrations en el
+      # INSERT final — la Señal de quiescencia (ref01 §2) podía leer 0 locks mientras el DDL
+      # seguía vivo. ExclusiveLock se sostiene desde AQUÍ hasta el commit/rollback, cubriendo
+      # TODA la ventana de mutación, no solo su último instante.
+      printf 'lock table supabase_migrations.schema_migrations in exclusive mode;\n'
+      # Revalidación DENTRO de la misma transacción, tras el lock y ANTES del DDL:
+      # pg_locks=0 no cerca un POST anterior que fue ACEPTADO por el servidor
+      # pero aún no llegó a ejecutar su propio `lock table` — dos intentos para la MISMA
+      # versión pueden ambos superar esa lectura y competir por el lock. Postgres serializa
+      # el ACCESO al lock (el segundo en pedirlo espera a que el primero haga commit/
+      # rollback); este guard hace que el SEGUNDO en obtenerlo, tras esperar, se aborte solo
+      # si la versión ya quedó aplicada por el que llegó primero — nunca repite el DDL.
+      printf "do \$\$\nbegin\n  if exists (select 1 from supabase_migrations.schema_migrations where version = '%s') then\n    raise exception 'PROC-M13: version %s ya aplicada -- retry duplicado tras carrera de lock, abortando sin repetir DDL';\n  end if;\nend \$\$;\n" \
+        "$TS" "$TS"
+      cat "$SQL_FILE"
+      printf "\ninsert into supabase_migrations.schema_migrations(version,name) values('%s','%s');\ncommit;\n" \
+        "$TS" "$NAME"
+    } | jq -Rs '{query:.}' > "$PAYLOAD"
+
+    # Paso 4 — POST (SIEMPRE curl: Python/urllib → CF 1010) + validación de la respuesta
+    resp="$(curl -q -sS -w $'\n%{http_code}' --connect-timeout 10 --max-time 120 \
+      -K "$CURL_CFG" -X POST "$API/database/query" \
+      --data-binary @"$PAYLOAD")" || { rm -f "$PAYLOAD"; class ESCALAR; echo "✗ Paso 4 ($TS): curl falló (red)" >&2; exit 1; }
+    rm -f "$PAYLOAD"
+    code="$(printf '%s' "$resp" | tail -n1)"
+    body="$(printf '%s' "$resp" | sed '$d')"
+    case "$code" in
+      200|201) ;;
+      *) class ESCALAR; echo "✗ Paso 4 ($TS): HTTP ${code:-sin-respuesta} — $body. NO insertar ledger a mano." >&2; exit 1 ;;
+    esac
+    # Contrato de éxito = WHITELIST ESTRUCTURAL EXACTA (una lista negra
+    # "array sin objetos-error" seguía aceptando [{"unexpected":true}], [{"message":...}],
+    # [null], ["garbage"]). El result-set del último statement (`commit;`) es `[]`, o
+    # `[{"schedule":N}]` cuando la migración incluye cron.schedule. Éxito ⇔ un ARRAY
+    # cuyos elementos (si hay) son EXACTAMENTE objetos `{"schedule": <número>}`. Cualquier
+    # otra forma aborta el gap SIN registrar el ledger.
+    require_shape "$body" 'type=="array" and all(.[]; type=="object" and keys==["schedule"] and (.schedule|type=="number"))' \
+      "Paso 4 ($TS): respuesta no confirma commit (NO insertar ledger a mano; corregir y reanudar desde $TS)" || { class ESCALAR; exit 1; }
+    echo "✓ aplicada $TS ($NAME)"
+  done < "$WORKDIR/v-gap.txt"
+fi
+
+# ── Paso 5 — verificación post-apply: sincronía DEFINITIVA (main fresco de origin) +
+#    advisors 0 ERROR. Reusa fetch_ledger (misma validación robusta que Paso 2). ──
+git fetch origin {{repo_rama}} --quiet || { class TRANSITORIO; echo "✗ Paso 5: git fetch falló — NO declarar sincronía (fail-closed)" >&2; exit 1; }
+git ls-tree -r --name-only origin/{{repo_rama}} -- {{migraciones_dir}}/ \
+  | grep -E '\.sql$' | xargs -n1 basename | cut -d_ -f1 | sort > "$WORKDIR/v-main-final.txt"
+fetch_ledger > "$WORKDIR/v-prod-final.txt"
+
+if ! diff -q "$WORKDIR/v-main-final.txt" "$WORKDIR/v-prod-final.txt" >/dev/null; then
+  class ESCALAR
+  echo "✗ Paso 5: main (origin fresco) y ledger de prod DIVERGEN tras el apply:" >&2
+  comm -3 "$WORKDIR/v-main-final.txt" "$WORKDIR/v-prod-final.txt" >&2
+  exit 1
+fi
+echo "✓ Paso 5: sincronía main↔prod confirmada"
+
+# Advisors (PROC-M15): 0 con level == ERROR en security y performance.
+for kind in security performance; do
+  adv="$(curl -q -sS -w $'\n%{http_code}' --connect-timeout 10 --max-time 60 \
+    -K "$CURL_CFG" "$API/advisors/$kind")" || { class TRANSITORIO; echo "✗ Paso 5: advisors/$kind curl falló" >&2; exit 1; }
+  acode="$(printf '%s' "$adv" | tail -n1)"
+  abody="$(printf '%s' "$adv" | sed '$d')"
+  [ "$acode" = "200" ] || { class TRANSITORIO; echo "✗ Paso 5: advisors/$kind HTTP $acode — $abody" >&2; exit 1; }
+  # Validar la FORMA COMPLETA antes de contar. `.lints[]?` con `?` convertía
+  # {} o {"message":...} en nerr=0. validar solo que `.lints` sea un array
+  # seguía aceptando elementos sin contrato ({"severity":"ERROR"}, {}, null) → 0 ERROR falso.
+  # WHITELIST: objeto con `.lints` array, y CADA elemento un objeto con `.level` en el conjunto
+  # conocido {ERROR,WARN,INFO}. Un elemento incompleto o un level desconocido (cambio de
+  # contrato del endpoint) aborta el gate. Solo entonces contamos (sin `?`, ya validado).
+  require_shape "$abody" \
+    '(type=="object") and (.lints|type=="array") and (.lints|all(.[]; type=="object" and has("level") and (.level=="ERROR" or .level=="WARN" or .level=="INFO")))' \
+    "Paso 5: advisors/$kind (respuesta fuera del contrato de lints)" || { class TRANSITORIO; exit 1; }
+  nerr="$(printf '%s' "$abody" | jq '[.lints[] | select(.level=="ERROR")] | length')"
+  echo "advisors/$kind: $nerr ERROR"
+  [ "$nerr" = "0" ] || { class ESCALAR; echo "✗ Paso 5: advisors/$kind tiene $nerr ERROR — bloquea (fix por migración nueva)." >&2; exit 1; }
+done
+echo "✓ PROC-M13 completo"
+```
+
+**Diagnóstico rápido**:
+
+| Síntoma | Causa | Acción |
+|---|---|---|
+| 403 / CF error 1010 con cliente Python/urllib | Cloudflare rechaza ese user-agent | `curl` (mecánica verificada) |
+| 401/403 con curl | Token con comillas/`\r` | Re-sanear (paso 0) |
+| `current transaction is aborted` | Wrapper sobre `BEGIN;` top-level | PRE-CHECK (paso 1); aplicar sin wrapper |
+| count no sube tras aplicar | `insert` del ledger fuera de la tx | Revisar payload (paso 3) |

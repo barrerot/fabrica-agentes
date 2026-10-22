@@ -1,0 +1,515 @@
+######## gh pr view --json
+Specify one or more comma-separated fields for `--json`:
+  additions
+  assignees
+  author
+  autoMergeRequest
+  baseRefName
+  body
+  changedFiles
+  closed
+  closedAt
+  comments
+  commits
+  createdAt
+  deletions
+  files
+  headRefName
+  headRefOid
+  headRepository
+  headRepositoryOwner
+  id
+  isCrossRepository
+  isDraft
+  labels
+  latestReviews
+  maintainerCanModify
+  mergeCommit
+  mergeStateStatus
+  mergeable
+  mergedAt
+  mergedBy
+  milestone
+  number
+  potentialMergeCommit
+  projectCards
+  projectItems
+  reactionGroups
+  reviewDecision
+  reviewRequests
+  reviews
+  state
+  statusCheckRollup
+  title
+  updatedAt
+  url
+######## gh pr list --json
+Specify one or more comma-separated fields for `--json`:
+  additions
+  assignees
+  author
+  autoMergeRequest
+  baseRefName
+  body
+  changedFiles
+  closed
+  closedAt
+  comments
+  commits
+  createdAt
+  deletions
+  files
+  headRefName
+  headRefOid
+  headRepository
+  headRepositoryOwner
+  id
+  isCrossRepository
+  isDraft
+  labels
+  latestReviews
+  maintainerCanModify
+  mergeCommit
+  mergeStateStatus
+  mergeable
+  mergedAt
+  mergedBy
+  milestone
+  number
+  potentialMergeCommit
+  projectCards
+  projectItems
+  reactionGroups
+  reviewDecision
+  reviewRequests
+  reviews
+  state
+  statusCheckRollup
+  title
+  updatedAt
+  url
+######## gh pr checks --json
+unknown flag: --json
+
+Usage:  gh pr checks [<number> | <url> | <branch>] [flags]
+
+Flags:
+      --fail-fast          Exit watch mode on first check failure
+  -i, --interval --watch   Refresh interval in seconds when using --watch flag (default 10)
+      --required           Only show checks that are required
+      --watch              Watch checks until they finish
+  -w, --web                Open the web browser to show details about checks
+
+######## gh pr status --json
+Specify one or more comma-separated fields for `--json`:
+  additions
+  assignees
+  author
+  autoMergeRequest
+  baseRefName
+  body
+  changedFiles
+  closed
+  closedAt
+  comments
+  commits
+  createdAt
+  deletions
+  files
+  headRefName
+  headRefOid
+  headRepository
+  headRepositoryOwner
+  id
+  isCrossRepository
+  isDraft
+  labels
+  latestReviews
+  maintainerCanModify
+  mergeCommit
+  mergeStateStatus
+  mergeable
+  mergedAt
+  mergedBy
+  milestone
+  number
+  potentialMergeCommit
+  projectCards
+  projectItems
+  reactionGroups
+  reviewDecision
+  reviewRequests
+  reviews
+  state
+  statusCheckRollup
+  title
+  updatedAt
+  url
+######## gh repo view --json
+Specify one or more comma-separated fields for `--json`:
+  assignableUsers
+  codeOfConduct
+  contactLinks
+  createdAt
+  defaultBranchRef
+  deleteBranchOnMerge
+  description
+  diskUsage
+  forkCount
+  fundingLinks
+  hasDiscussionsEnabled
+  hasIssuesEnabled
+  hasProjectsEnabled
+  hasWikiEnabled
+  homepageUrl
+  id
+  isArchived
+  isBlankIssuesEnabled
+  isEmpty
+  isFork
+  isInOrganization
+  isMirror
+  isPrivate
+  isSecurityPolicyEnabled
+  isTemplate
+  isUserConfigurationRepository
+  issueTemplates
+  issues
+  labels
+  languages
+  latestRelease
+  licenseInfo
+  mentionableUsers
+  mergeCommitAllowed
+  milestones
+  mirrorUrl
+  name
+  nameWithOwner
+  openGraphImageUrl
+  owner
+  parent
+  primaryLanguage
+  projects
+  pullRequestTemplates
+  pullRequests
+  pushedAt
+  rebaseMergeAllowed
+  repositoryTopics
+  securityPolicyUrl
+  squashMergeAllowed
+  sshUrl
+  stargazerCount
+  templateRepository
+  updatedAt
+  url
+  usesCustomOpenGraphImage
+  viewerCanAdminister
+  viewerDefaultCommitEmail
+  viewerDefaultMergeMethod
+  viewerHasStarred
+  viewerPermission
+  viewerPossibleCommitEmails
+  viewerSubscription
+  visibility
+  watchers
+######## gh issue view --json
+Specify one or more comma-separated fields for `--json`:
+  assignees
+  author
+  body
+  closed
+  closedAt
+  comments
+  createdAt
+  id
+  labels
+  milestone
+  number
+  projectCards
+  projectItems
+  reactionGroups
+  state
+  title
+  updatedAt
+  url
+######## gh issue list --json
+Specify one or more comma-separated fields for `--json`:
+  assignees
+  author
+  body
+  closed
+  closedAt
+  comments
+  createdAt
+  id
+  labels
+  milestone
+  number
+  projectCards
+  projectItems
+  reactionGroups
+  state
+  title
+  updatedAt
+  url
+######## gh run list --json
+Specify one or more comma-separated fields for `--json`:
+  conclusion
+  createdAt
+  databaseId
+  displayTitle
+  event
+  headBranch
+  headSha
+  name
+  number
+  startedAt
+  status
+  updatedAt
+  url
+  workflowDatabaseId
+  workflowName
+######## gh run view --json
+Specify one or more comma-separated fields for `--json`:
+  conclusion
+  createdAt
+  databaseId
+  displayTitle
+  event
+  headBranch
+  headSha
+  jobs
+  name
+  number
+  startedAt
+  status
+  updatedAt
+  url
+  workflowDatabaseId
+  workflowName
+######## gh label list --json
+Specify one or more comma-separated fields for `--json`:
+  color
+  createdAt
+  description
+  id
+  isDefault
+  name
+  updatedAt
+  url
+######## gh release view --json
+Specify one or more comma-separated fields for `--json`:
+  apiUrl
+  assets
+  author
+  body
+  createdAt
+  id
+  isDraft
+  isPrerelease
+  name
+  publishedAt
+  tagName
+  tarballUrl
+  targetCommitish
+  uploadUrl
+  url
+  zipballUrl
+######## gh pr diff --help
+View changes in a pull request.
+
+Without an argument, the pull request that belongs to the current branch
+is selected.
+
+With `--web` flag, open the pull request diff in a web browser instead.
+
+
+USAGE
+  gh pr diff [<number> | <url> | <branch>] [flags]
+
+FLAGS
+      --color string   Use color in diff output: {always|never|auto} (default "auto")
+      --name-only      Display only names of changed files
+      --patch          Display diff in patch format
+  -w, --web            Open the pull request diff in the browser
+
+INHERITED FLAGS
+      --help                     Show help for command
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+LEARN MORE
+  Use `gh <command> <subcommand> --help` for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+######## gh pr close --help
+Close a pull request
+
+USAGE
+  gh pr close {<number> | <url> | <branch>} [flags]
+
+FLAGS
+  -c, --comment string   Leave a closing comment
+  -d, --delete-branch    Delete the local and remote branch after close
+
+INHERITED FLAGS
+      --help                     Show help for command
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+LEARN MORE
+  Use `gh <command> <subcommand> --help` for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+######## gh run view --help
+View a summary of a workflow run
+
+For more information about output formatting flags, see `gh help formatting`.
+
+USAGE
+  gh run view [<run-id>] [flags]
+
+FLAGS
+  -a, --attempt uint      The attempt number of the workflow run
+      --exit-status       Exit with non-zero status if run failed
+  -j, --job string        View a specific job ID from a run
+  -q, --jq expression     Filter JSON output using a jq expression
+      --json fields       Output JSON with the specified fields
+      --log               View full log for either a run or specific job
+      --log-failed        View the log for any failed steps in a run or specific job
+  -t, --template string   Format JSON output using a Go template; see "gh help formatting"
+  -v, --verbose           Show job steps
+  -w, --web               Open run in the browser
+
+INHERITED FLAGS
+      --help                     Show help for command
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+EXAMPLES
+  # Interactively select a run to view, optionally selecting a single job
+  $ gh run view
+
+  # View a specific run
+  $ gh run view 12345
+
+  # View a specific run with specific attempt number
+  $ gh run view 12345 --attempt 3
+
+  # View a specific job within a run
+  $ gh run view --job 456789
+
+  # View the full log for a specific job
+  $ gh run view --log --job 456789
+
+  # Exit non-zero if a run failed
+  $ gh run view 0451 --exit-status && echo "run pending or passed"
+
+LEARN MORE
+  Use `gh <command> <subcommand> --help` for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+######## gh run rerun --help
+Rerun an entire run, only failed jobs, or a specific job from a run.
+
+Note that due to historical reasons, the `--job` flag may not take what you expect.
+Specifically, when navigating to a job in the browser, the URL looks like this:
+`https://github.com/<owner>/<repo>/actions/runs/<run-id>/jobs/<number>`.
+
+However, this `<number>` should not be used with the `--job` flag and will result in the
+API returning `404 NOT FOUND`. Instead, you can get the correct job IDs using the following command:
+
+	gh run view <run-id> --json jobs --jq '.jobs[] | {name, databaseId}'
+
+
+USAGE
+  gh run rerun [<run-id>] [flags]
+
+FLAGS
+  -d, --debug        Rerun with debug logging
+      --failed       Rerun only failed jobs, including dependencies
+  -j, --job string   Rerun a specific job from a run, including dependencies
+
+INHERITED FLAGS
+      --help                     Show help for command
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+LEARN MORE
+  Use `gh <command> <subcommand> --help` for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+######## gh pr reopen --help
+Reopen a pull request
+
+USAGE
+  gh pr reopen {<number> | <url> | <branch>} [flags]
+
+FLAGS
+  -c, --comment string   Add a reopening comment
+
+INHERITED FLAGS
+      --help                     Show help for command
+  -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+LEARN MORE
+  Use `gh <command> <subcommand> --help` for more information about a command.
+  Read the manual at https://cli.github.com/manual
+
+######## gh api --help
+Makes an authenticated HTTP request to the GitHub API and prints the response.
+
+The endpoint argument should either be a path of a GitHub API v3 endpoint, or
+`graphql` to access the GitHub API v4.
+
+Placeholder values `{owner}`, `{repo}`, and `{branch}` in the endpoint
+argument will get replaced with values from the repository of the current
+directory or the repository specified in the `GH_REPO` environment variable.
+Note that in some shells, for example PowerShell, you may need to enclose
+any value that contains `{...}` in quotes to prevent the shell from
+applying special meaning to curly braces.
+
+The default HTTP request method is `GET` normally and `POST` if any parameters
+were added. Override the method with `--method`.
+
+Pass one or more `-f/--raw-field` values in `key=value` format to add static string
+parameters to the request payload. To add non-string or placeholder-determined values, see
+`-F/--field` below. Note that adding request parameters will automatically switch the
+request method to `POST`. To send the parameters as a `GET` query string instead, use
+`--method GET`.
+
+The `-F/--field` flag has magic type conversion based on the format of the value:
+
+- literal values `true`, `false`, `null`, and integer numbers get converted to
+  appropriate JSON types;
+- placeholder values `{owner}`, `{repo}`, and `{branch}` get populated with values
+  from the repository of the current directory;
+- if the value starts with `@`, the rest of the value is interpreted as a
+  filename to read the value from. Pass `-` to read from standard input.
+
+For GraphQL requests, all fields other than `query` and `operationName` are
+interpreted as GraphQL variables.
+
+To pass nested parameters in the request payload, use `key[subkey]=value` syntax when
+declaring fields. To pass nested values as arrays, declare multiple fields with the
+syntax `key[]=value1`, `key[]=value2`. To pass an empty array, use `key[]` without a
+value.
+
+To pass pre-constructed JSON or payloads in other formats, a request body may be read
+from file specified by `--input`. Use `-` to read from standard input. When passing the
+request body this way, any parameters specified via field flags are added to the query
+string of the endpoint URL.
+
+In `--paginate` mode, all pages of results will sequentially be requested until
+there are no more pages of results. For GraphQL requests, this requires that the
+original query accepts an `$endCursor: String` variable and that it fetches the
+`pageInfo{ hasNextPage, endCursor }` set of fields from a collection.
+
+For more information about output formatting flags, see `gh help formatting`.
+
+USAGE
+  gh api <endpoint> [flags]
+
+FLAGS
+      --cache duration        Cache the response, e.g. "3600s", "60m", "1h"
+  -F, --field key=value       Add a typed parameter in key=value format
+  -H, --header key:value      Add a HTTP request header in key:value format
+      --hostname string       The GitHub hostname for the request (default "github.com")
+  -i, --include               Include HTTP response status line and headers in the output
+      --input file            The file to use as body for the HTTP request (use "-" to read from standard input)

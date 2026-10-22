@@ -1,0 +1,7 @@
+# Fuera del núcleo: .git, credenciales, estado y configuración adjudicada.
+.git/
+instalacion/generado/
+instalacion/estado/
+manifiestos/
+ledger/
+.env.local

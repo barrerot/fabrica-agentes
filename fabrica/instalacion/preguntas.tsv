@@ -1,0 +1,60 @@
+# preguntas.tsv — el cuestionario de instalación COMO DATOS (TAL-8044). Una fila = una pregunta, 9 columnas separadas por TABULADOR:
+#   id 	 bloque 	 texto 	 ayuda 	 tipo 	 validacion 	 defecto 	 depende_de 	 destino
+#   id          identificador estable [a-z][a-z0-9_]* (clave en el fichero de respuestas)
+#   tipo        texto | entero | sino | uuid | lista | opcional   (opcional = admite vacío y el defecto vacío es válido: se omite la clave)
+#   validacion  ERE POSIX que debe casar con el valor ENTERO (grep -E); es la fuente de verdad de lo que se acepta
+#   defecto     literal, o expansión: $USUARIO (usuario actual) · $HOSTNAME (host) · {id} (respuesta previa) · @ORG:<id> (propietario de una URL de GitHub)
+#   depende_de  vacío (siempre) | <id>=<valor> | <id>!=<valor>: la pregunta solo aplica si la condición se cumple
+#   destino     dónde aterriza la respuesta (informativo): manifiesto · identidad · perfil · ledger · agents · linear · env · anexo
+# Charset CERRADO a propósito: el motor hace `source` del manifiesto y lo que sale de aquí va a él (sin espacios en rutas ni nombres, sin comillas, sin $).
+# Ningún valor de credencial se pregunta jamás: los tokens se cargan POR NOMBRE en el .env.local que genera `generar-instancia.sh --solo-env`.
+proyecto	proyecto	¿Cómo se llama el proyecto (nombre corto)?	Minúsculas, dígitos y guiones, de 2 a 16 caracteres, empezando por letra (p. ej. «mifabrica»). Da nombre a los ficheros generados.	texto	^[a-z][a-z0-9-]{1,15}$			manifiesto,identidad,anexo
+repo_url	repositorio	URL https del repositorio de producto en GitHub	Formato https://github.com/<propietario>/<repo> (con .git opcional). Sin usuario, sin token y sin espacios.	texto	^https://github\.com/[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?/[A-Za-z0-9_-][A-Za-z0-9._-]{0,99}(\.git)?$			manifiesto,identidad
+repo_rama	repositorio	Rama principal del repositorio	Esta versión requiere main; si la rama por defecto tiene otro nombre, la persona debe decidir su cambio en el repositorio.	texto	^main$	main		manifiesto
+gh_org	github	Organización o usuario de GitHub propietario del repositorio	Por defecto, el propietario de la URL del repositorio.	texto	^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$	@ORG:repo_url		manifiesto
+linear_clave	linear	Clave del equipo de Linear	La que antecede al número de las issues (en ABC-123 es ABC). Mayúsculas y dígitos, de 1 a 10, empezando por letra.	texto	^[A-Z][A-Z0-9]{0,9}$			manifiesto
+linear_equipo_uuid	linear	UUID del equipo de Linear	Lo imprime consultar-estados-linear.sh con tu token. Formato 8-4-4-4-12 hexadecimal.	uuid	^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$			linear
+linear_inprogress_uuid	linear	UUID del estado «In Progress» del equipo	Lo imprime consultar-estados-linear.sh (línea SUGERENCIA). Formato 8-4-4-4-12 hexadecimal.	uuid	^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$			identidad,linear
+linear_inreview_uuid	linear	UUID del estado «In Review» del equipo	Lo imprime consultar-estados-linear.sh (línea SUGERENCIA). Formato 8-4-4-4-12 hexadecimal.	uuid	^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$			identidad,linear
+linear_proyecto	linear	Nombre del proyecto de Linear donde se crean las issues	Texto corto (letras, dígitos, espacios, punto, guion). El proyecto ya debe existir: no se crea ni se autodetecta.	texto	^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$			anexo,linear
+maquina_n	topologia	Número de esta máquina (un dígito del 0 al 9)	Entra en el nombre de los contenedores y de los canales (máquina 1 + canal 2 = 12).	entero	^[0-9]$	1		perfil
+host_nombre	topologia	Nombre de host de esta máquina	Lo que imprime el comando hostname. Es el coordinador único del ledger de cuentas.	texto	^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$	$HOSTNAME		perfil,ledger
+canales_n	topologia	Número de canales de producción (de 1 a 9)	Cada canal es un contenedor con su sesión de desarrollo y su auditor.	entero	^[1-9]$	2		perfil,agents
+usuario_ceo	topologia	Usuario de SO que ejerce de CEO (el usuario con el que operas esta máquina)	Minúsculas, dígitos, guion y guion bajo. Cada rol de la misma máquina lleva un usuario distinto: el bus lo exige para sellar.	texto	^[a-z_][a-z0-9_-]{0,31}$	$USUARIO		perfil
+usuario_c1	topologia	Usuario de SO de la torre de coordinación C1	Distinto del resto de roles de esta máquina.	texto	^[a-z_][a-z0-9_-]{0,31}$	{proyecto}-c1		perfil
+usuario_m1	topologia	Usuario de SO de la estación de merge M1	Distinto del resto de roles de esta máquina.	texto	^[a-z_][a-z0-9_-]{0,31}$	{proyecto}-m1		perfil
+usuario_incus	topologia	Usuario de SO que opera los contenedores con Incus	Todos los canales y runners comparten este usuario del host; distinto de CEO, C1, M1, ORQ y PM. No es el usuario dentro del contenedor.	texto	^[a-z_][a-z0-9_-]{0,31}$	{proyecto}-incus		perfil,anexo
+orq	topologia	¿Montar también el Orquestador (ORQ)?	si o no. Por defecto no: la topología mínima es CEO + C1 + M1 + canales.	sino	^(si|no)$	no		perfil
+usuario_orq	topologia	Usuario de SO del Orquestador	Distinto del resto de roles de esta máquina.	texto	^[a-z_][a-z0-9_-]{0,31}$	{proyecto}-orq	orq=si	perfil
+pm	topologia	¿Montar también el rol PM?	si o no. Por defecto no: sin fila pm en el perfil, el CEO no deduce PM de ninguna otra.	sino	^(si|no)$	no		perfil
+usuario_pm	topologia	Usuario de SO del PM	Distinto del resto de roles de esta máquina.	texto	^[a-z_][a-z0-9_-]{0,31}$	{proyecto}-pm	pm=si	perfil
+cuser	recursos	Usuario dentro de los contenedores de los canales	Usuario Linux del contenedor donde corren los agentes.	texto	^[a-z_][a-z0-9_-]{0,31}$	vivecoder		agents
+pool_gib	recursos	Tamaño en GiB del pool de disco de los contenedores	Entero de 2 a 4 cifras (se declara como NNGiB). Mínimo recomendado 100.	entero	^[0-9]{2,4}$	300		perfil
+canal_cpu	recursos	CPUs por canal	Entero de 1 a 99.	entero	^[1-9][0-9]?$	4		perfil
+canal_mem_gib	recursos	Memoria por canal en GiB	Entero de 1 a 99.	entero	^[1-9][0-9]?$	8		perfil
+pozos_alias	cuentas	Alias de los pozos de Claude (de 1 a 9), separados por comas	Un alias por cuenta, minúsculas, dígitos, punto, guion; sin repetidos y SIN correos ni credenciales (p. ej. cuenta1,cuenta2).	lista	^[a-z0-9][a-z0-9._-]{0,23}(,[a-z0-9][a-z0-9._-]{0,23}){0,8}$			ledger,manifiesto
+claude_auth	cuentas	¿Cómo acreditar Claude: login por rol o token largo?	login: sesión individual por rol; token: una cuenta para varios roles sin iniciar sesión en cada uno, mediante claude setup-token y lectura oculta por alias de pozo, nunca en el chat; para cambiar después: registrar claude_auth token y regenerar.	texto	^(login|token)$	login		anexo
+codex	cuentas	¿Usas Codex como auditor de los canales?	si o no. Sin Codex el auditor es Claude (claude-root) y queda declarado en el perfil, el anexo y agents.conf.	sino	^(si|no)$	no		agents,perfil,anexo
+codex_n	cuentas	Número de cuentas de Codex (de 1 a 9)	Se registran en el ledger con alias derivados; Codex no se clona entre contenedores (se mueve).	entero	^[1-9]$	1	codex=si	ledger,manifiesto
+supabase	stack	¿El proyecto usa Supabase?	si o no. Sin Supabase el stack es «ninguno» y no se pide ref ni token de Supabase.	sino	^(si|no)$	no		identidad,env
+supabase_ref	stack	Ref del proyecto de Supabase	Entre 15 y 30 caracteres en minúsculas y dígitos (el identificador de la URL del proyecto, no una clave).	texto	^[a-z0-9]{15,30}$		supabase=si	identidad
+git_nombre_tmpl	git	Plantilla del nombre de git de cada canal	Debe contener {channel}, que se sustituye por el nombre del canal. Sin espacios.	texto	^[A-Za-z0-9._@{}-]*\{channel\}[A-Za-z0-9._@{}-]*$	{channel}		manifiesto
+git_email_tmpl	git	Plantilla del correo de git de cada canal	Debe contener {channel} antes de la arroba. Dominio inexistente por defecto (channels.invalid).	texto	^[A-Za-z0-9._-]*\{channel\}[A-Za-z0-9._-]*@[A-Za-z0-9.-]+$	{channel}@channels.invalid		manifiesto
+modelo_plan	modelos	Modelo de la fase de plan (opcional)	ID completo (claude-...). Vacío = el del paquete. Nunca un alias desnudo.	opcional	^$|^claude-[a-z0-9.-]{3,40}$			agents
+modelo_codigo	modelos	Modelo de la fase de código de los canales (opcional)	ID completo (claude-...). Vacío = el del paquete. Nunca un alias desnudo.	opcional	^$|^claude-[a-z0-9.-]{3,40}$			agents
+instalar_cmd	gates	Comando de instalación de dependencias del producto	Letras, dígitos, espacio y ._/:@=,-; true solo si no necesita dependencias. Para comandos complejos use un script del repositorio.	texto	^[A-Za-z0-9 ._/:@=,-]+$			manifiesto
+gates_ids	gates	Lista de gates locales obligatorios	Identificadores en minúsculas separados por un espacio; cada uno tendrá su propia pregunta de comando. Sin duplicados ni colisiones entre guion y subrayado.	lista	^[a-z][a-z0-9_-]{0,39}( [a-z][a-z0-9_-]{0,39}){0,29}$			manifiesto
+validador_rama	gates	Ruta del validador de rama en el producto	Script relativo al repositorio. El agregador lo exige antes de certificar; debe existir en el producto.	texto	^[A-Za-z0-9_-][A-Za-z0-9._/-]*$	scripts/github/validar-rama-pr.sh		manifiesto
+superficies_sensibles	gates	Superficies sensibles del producto	Tokens separados por espacios para el campo surfaces del handoff; adapte el vocabulario al producto.	lista	^[a-z][a-z0-9_-]*( [a-z][a-z0-9_-]*)*$	@SUPERFICIES		manifiesto
+e2e	gates	¿Declara gates E2E por shards?	si o no. Sin E2E no se emiten familias, wrapper ni registro activos.	sino	^(si|no)$	no		manifiesto
+e2e_familias	gates	Familias E2E del producto	Identificadores separados por espacios; deben corresponder al registro de shards.	lista	^[a-z][a-z0-9_-]*( [a-z][a-z0-9_-]*)*$		e2e=si	manifiesto
+e2e_wrapper	gates	Comando del wrapper E2E	Letras, dígitos, espacio y ._/:@=,-; para comandos complejos use un script del repositorio.	texto	^[A-Za-z0-9 ._/:@=,-]+$		e2e=si	manifiesto
+e2e_registro	gates	Ruta del registro de shards E2E	Ruta relativa con directorio; el registro debe existir en el producto. No se inventan shards.	texto	^[A-Za-z0-9_-][A-Za-z0-9._/-]*/[A-Za-z0-9._-]+$		e2e=si	manifiesto
+nombre_legible	anexo	Nombre legible del proyecto	Nombre público; letras, dígitos, espacios, punto, guion y subrayado.	texto	^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$	{proyecto}		anexo
+linear_workspace	anexo	Slug del workspace de Linear	Slug público de la URL del workspace; no es un token.	texto	^[a-z0-9][a-z0-9-]{0,59}$			anexo
+initiative_uuid	anexo	UUID de initiative existente (opcional)	Vacío si esta instancia no trabaja con initiatives. No inventar UUID.	opcional	^$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$			anexo
+lead_github	anexo	Login de GitHub del lead responsable	Login público; las autoridades de receipts se acreditan por separado.	texto	^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$			anexo
+migraciones_dir	anexo	Directorio de migraciones de Supabase	Ruta relativa al producto sin componentes vacíos, punto ni traversal.	texto	^[A-Za-z0-9_-][A-Za-z0-9._/-]*$	supabase/migrations	supabase=si	anexo,manifiesto
+vault_gate	anexo	Script del hard-gate de secrets de Vault	Script relativo del producto; obligatorio antes del apply. Si no existe, el apply aborta.	texto	^[A-Za-z0-9_-][A-Za-z0-9._/-]*$	scripts/ci/check-cron-secrets-provisioned.sh	supabase=si	anexo
+superficies_paths	anexo	Excepciones de superficie y path-pattern (opcional)	Formato auth:src/auth/**,commerce:src/shop/**; vacío significa sin excepciones adjudicadas.	opcional	^$|^[a-z][a-z0-9_-]*:[A-Za-z0-9_*/.-]+(,[a-z][a-z0-9_-]*:[A-Za-z0-9_*/.-]+)*$			anexo
+playwright_flujos	anexo	Flujos de auditoría Playwright (opcional)	Nombres separados por comas (login,checkout); vacío significa carril sin flujos adjudicados.	opcional	^$|^[a-z][a-z0-9_-]*(,[a-z][a-z0-9_-]*)*$			anexo
